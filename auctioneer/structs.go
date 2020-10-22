@@ -2,6 +2,9 @@ package auctioneer
 
 import "time"
 
+// TODO: Move some of them into common & also review them
+
+// Auction :
 type Auction struct {
 	ID        string
 	Timeout   time.Duration

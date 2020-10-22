@@ -3,15 +3,16 @@ package auctioneer
 import (
 	"fmt"
 	"log"
+	"math"
 	"net/http"
 	"time"
 
 	"context"
 )
 
-// startAuction : it modifies the passed auction
+// startAuction :
 // TODO: find a better design
-func startAuction(auction *Auction) ([]*Bid, error) {
+func startAuction(ctx context.Context, auction *Auction) ([]*Bid, error) {
 	// 1. fetch all the bidders from cache
 	bidCriteria := ""
 	bidders := getInterestedBidders(bidCriteria)
@@ -21,46 +22,59 @@ func startAuction(auction *Auction) ([]*Bid, error) {
 
 	// 2. notify all of them in different routines
 	// let us create the book of bids, aka auction book
-	ctxToControlBidders := context.WithDeadline()
+	ctxToControlBidders, cancelPendingBiddingRequests := context.WithCancel(context.Background())
 	bidBook := make(chan *Bid, len(bidders))
 	for _, bidder := range bidders {
-		go func() {
-			bid, err := notifyBidderAboutAuction(bidder)
+		go func(ctx context.Context) {
+			bid, err := engageBidderInAuction(ctx, auction, bidder)
 			if err != nil {
 				// TODO: hmm, what should be done over here?
 				log.Printf("failed to notify bidder: %v, about auction: %v, err: %v")
+				return
 			}
 			bidBook <- bid
-		}()
+		}(ctxToControlBidders)
 	}
 
 	// 3. keep processing bids till auction.Timeout
 	bids := make([]*Bid, 0)
-	auctionCountdown := time.NewTimer(auction.Timeout * time.MilliSecond)
+	auctionCountdown := time.NewTimer(auction.Timeout * time.Microsecond)
 	for {
 		select {
 		case bid := <-bidBook:
 			bids = append(bids, bid)
 		case auctionClosureTime := <-auctionCountdown.C:
+			cancelPendingBiddingRequests()
 			close(bidBook)
-			ctxToControlBidders.Cancel()
 			log.Printf("auction: %v has been closed at: %v, received : %v bids so far", auction.ID, auctionClosureTime, len(bids))
+			break
+		case <-ctx.Done():
+			cancelPendingBiddingRequests()
+			close(bidBook)
+			// someone who started this auction now wants to end it, so let us do it on his/her command
 			break
 		}
 	}
+
 	auctionCountdown.Stop()
 	return bids, nil
 }
 
-func notifyBidderAboutAuction(bidder *Bidder) (*Bid, error) {
-	client := &http.Client{}
-	_, err := client.Get(bidder.URLToAskForBid)
+func engageBidderInAuction(ctx context.Context, auction *Auction, bidder *Bidder) (*Bid, error) {
+	// REVIEW: should this be a GET request?
+	req, err := http.NewRequest("GET", bidder.URLToAskForBid+"/"+auction.ID, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	resp, err := (&http.Client{}).Do(req)
 	if err != nil {
 		return nil, err
 	}
 
 	// TODO:
 	// err := parseBid(resp.Body)
+	log.Printf("bidder replied with: %v\n", resp)
 
 	return nil, nil
 }
@@ -76,4 +90,24 @@ func getInterestedBidders(criteria interface{}) []*Bidder {
 
 func parseBid() (*Bid, error) {
 	return nil, nil
+}
+
+func findBestBid(bids []*Bid) (*Bid, error) {
+	bestBid := &Bid{
+		// TODO: use bitwise shift operation
+		Amount: -(math.MaxFloat32 - 1),
+	}
+	for _, bid := range bids {
+		if bid.Amount > bestBid.Amount {
+			bestBid = bid
+		}
+
+		// REVIEW:
+		// NOTE:
+		// what if two bids are at the same price???
+		// seems like we need to store the time when the bid actually was placed
+		// and the winner then can be decided on the basis of reply time
+	}
+
+	return bestBid, nil
 }
