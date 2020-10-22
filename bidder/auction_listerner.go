@@ -1,10 +1,12 @@
 package bidder
 
-func ListenAuctions() {
+// listenAuctions :
+func listenAuctions() {
 
 }
 
-func RegisterWithAuctioneer() {
+// registerWithAuctioneer :
+func registerWithAuctioneer() {
 
 }
 
