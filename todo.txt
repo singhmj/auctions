@@ -1,0 +1,15 @@
+1. Bidder
+    - Register with the auctioneer
+    - Server to listen to auctions
+    - Code to reply with random bid value within a time limit
+2. Auctioneer
+    - Server to receive auction, and bidder registration requests
+    - Cache to keep available bidders in hand
+    - Logic to find the best bid
+3. Dockerize
+    - Create docker-compose.yml
+4. Git
+    - rebase and clean up the history
+
+// EXTRA
+5. Replace HTTP/1.0 connection b/w bidders and auctioneers to a HTTP/2.0 connection for alive connections
