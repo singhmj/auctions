@@ -1,0 +1,5 @@
+package bidder
+
+func Start() {
+
+}

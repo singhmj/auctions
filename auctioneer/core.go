@@ -21,7 +21,7 @@ func startAuction(ctx context.Context, auction *Auction) ([]*Bid, error) {
 	}
 
 	// 2. notify all of them in different routines
-	// let us create the book of bids, aka auction book
+	// let us create the book for bids, aka auction book
 	ctxToControlBidders, cancelPendingBiddingRequests := context.WithCancel(context.Background())
 	bidBook := make(chan *Bid, len(bidders))
 	for _, bidder := range bidders {

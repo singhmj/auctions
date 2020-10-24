@@ -10,13 +10,25 @@ import (
 // Start : Starts the auctioneer
 func Start(config Config) error {
 	// 1. restore the already registered bidders
-	// restoreBidders()
+	err := restoreBidders()
+	if err != nil {
+		fmt.Errorf("failed to restore biddders, more: %v", err)
+	}
 
 	// 2. start the http server and listen to requests
-	err := startHTTPServer(config.IP, config.Port)
+	err = startHTTPServer(config.IP, config.Port)
 	if err != nil {
 		return fmt.Errorf("failed to start http server: %v", err)
 	}
+
+	return nil
+}
+
+func restoreBidders() error {
+	// get bidders from redis/file/db?
+	// SetBidderInCache()
+
+	return nil
 }
 
 func startHTTPServer(ip string, port int) error {
