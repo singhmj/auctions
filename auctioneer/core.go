@@ -1,6 +1,7 @@
 package auctioneer
 
 import (
+	"auctions/common"
 	"fmt"
 	"log"
 	"math"
@@ -12,7 +13,7 @@ import (
 
 // startAuction :
 // TODO: find a better design
-func startAuction(ctx context.Context, auction *Auction) ([]*Bid, error) {
+func startAuction(ctx context.Context, auction *Auction) ([]*common.Bid, error) {
 	// 1. fetch all the bidders from cache
 	bidCriteria := ""
 	bidders := getInterestedBidders(bidCriteria)
@@ -23,7 +24,7 @@ func startAuction(ctx context.Context, auction *Auction) ([]*Bid, error) {
 	// 2. notify all of them in different routines
 	// let us create the book for bids, aka auction book
 	ctxToControlBidders, cancelPendingBiddingRequests := context.WithCancel(context.Background())
-	bidBook := make(chan *Bid, len(bidders))
+	bidBook := make(chan *common.Bid, len(bidders))
 	for _, bidder := range bidders {
 		go func(ctx context.Context) {
 			bid, err := engageBidderInAuction(ctx, auction, bidder)
@@ -37,7 +38,7 @@ func startAuction(ctx context.Context, auction *Auction) ([]*Bid, error) {
 	}
 
 	// 3. keep processing bids till auction.Timeout
-	bids := make([]*Bid, 0)
+	bids := make([]*common.Bid, 0)
 	auctionCountdown := time.NewTimer(auction.Timeout * time.Microsecond)
 	for {
 		select {
@@ -60,7 +61,7 @@ func startAuction(ctx context.Context, auction *Auction) ([]*Bid, error) {
 	return bids, nil
 }
 
-func engageBidderInAuction(ctx context.Context, auction *Auction, bidder *Bidder) (*Bid, error) {
+func engageBidderInAuction(ctx context.Context, auction *Auction, bidder *common.Bidder) (*common.Bid, error) {
 	// REVIEW: should this be a GET request?
 	req, err := http.NewRequest("GET", bidder.URLToAskForBid+"/"+auction.ID, nil)
 	if err != nil {
@@ -79,21 +80,21 @@ func engageBidderInAuction(ctx context.Context, auction *Auction, bidder *Bidder
 	return nil, nil
 }
 
-func getInterestedBidders(criteria interface{}) []*Bidder {
+func getInterestedBidders(criteria interface{}) []*common.Bidder {
 	// TODO : fetch them from cache
-	return []*Bidder{
-		&Bidder{ID: "localhost", URLToAskForBid: "http://localhost:9999/bid"},
-		&Bidder{ID: "localhost", URLToAskForBid: "http://localhost:9998/bid"},
-		&Bidder{ID: "localhost", URLToAskForBid: "http://localhost:9997/bid"},
+	return []*common.Bidder{
+		&common.Bidder{ID: "localhost", URLToAskForBid: "http://localhost:9999/bid"},
+		&common.Bidder{ID: "localhost", URLToAskForBid: "http://localhost:9998/bid"},
+		&common.Bidder{ID: "localhost", URLToAskForBid: "http://localhost:9997/bid"},
 	}
 }
 
-func parseBid() (*Bid, error) {
+func parseBid() (*common.Bid, error) {
 	return nil, nil
 }
 
-func findBestBid(bids []*Bid) (*Bid, error) {
-	bestBid := &Bid{
+func findBestBid(bids []*common.Bid) (*common.Bid, error) {
+	bestBid := &common.Bid{
 		// TODO: use bitwise shift operation
 		Amount: -(math.MaxFloat32 - 1),
 	}

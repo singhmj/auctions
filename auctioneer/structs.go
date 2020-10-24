@@ -1,6 +1,9 @@
 package auctioneer
 
-import "time"
+import (
+	"auctions/common"
+	"time"
+)
 
 // TODO: Move some of them into common & also review them
 
@@ -8,25 +11,8 @@ import "time"
 type Auction struct {
 	ID        string
 	Timeout   time.Duration
-	Bids      []*Bid
-	WinnerBid *Bid
-}
-
-type Bid struct {
-	ID        string
-	AuctionID int
-	BidderID  string
-	Amount    float32
-}
-
-type BidderServer struct {
-	IP   string `json:"ip"`
-	Port int    `json:"port"`
-}
-
-type Bidder struct {
-	ID             string `json:"id"`
-	URLToAskForBid string `json:"url_to_ask_for_bid"`
+	Bids      []*common.Bid
+	WinnerBid *common.Bid
 }
 
 // AuctionRequest :
@@ -36,6 +22,6 @@ type AuctionRequest struct {
 
 // AuctionResponse :
 type AuctionResponse struct {
-	ID      string `json:"auction_id"`
-	BestBid Bid    `json:"bid"`
+	ID      string      `json:"auction_id"`
+	BestBid *common.Bid `json:"bid"`
 }
