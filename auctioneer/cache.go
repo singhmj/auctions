@@ -20,14 +20,18 @@ func GetCache() *cache.Cache {
 	return singletonCache
 }
 
+func saveAuctionBook(book *auctionBook) {
+	GetCache().Set("auction-book-" + book.AuctionID)
+}
+
 // getAuctionBook :
-func getAuctionBook(auctionID string) (*Auction, bool) {
+func getAuctionBook(auctionID string) (*auctionBook, bool) {
 	data, doesExist := GetCache().Get("auction-book-" + auctionID)
 	if !doesExist {
 		return nil, doesExist
 	}
 
-	return data.(*Auction), doesExist
+	return data.(*auctionBook), doesExist
 }
 
 // createAuctionBook :

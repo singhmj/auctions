@@ -1,6 +1,7 @@
 package auctioneer
 
 import (
+	"auctions/common"
 	"encoding/json"
 	"io"
 	"io/ioutil"
@@ -12,8 +13,8 @@ var registerBidder = func(w http.ResponseWriter, r *http.Request) {
 	// TODO:
 }
 
-// processAuctionRequest :
-var processAuctionRequest = func(w http.ResponseWriter, r *http.Request) {
+// processNewAuctionRequest :
+var processNewAuctionRequest = func(w http.ResponseWriter, r *http.Request) {
 	// parse the bid request
 	body, err := readHTTPBody(r.Body)
 	if err != nil {
@@ -29,16 +30,37 @@ var processAuctionRequest = func(w http.ResponseWriter, r *http.Request) {
 	// err := validateAuctionRequest()
 
 	// start the auction
-	auction := &Auction{ID: auctionRequest.ID}
-	bids, err := startAuction(r.Context(), auction)
+	auction := &common.Auction{ID: auctionRequest.ID}
+	err = startAuction(r.Context(), auction)
 	if err != nil {
 		// write suitable http error code
 		// and a message too
 		return
 	}
 
+}
+
+var getAuctionInformation = func(w http.ResponseWriter, r *http.Response) {}
+
+var getAuctionWinner = func(w http.ResponseWriter, r *http.Response) {
+	// read body
+
+	// verify request
+	auctionID := ""
+
+	// lookup in the cache if there's any auction book matching the auctionid
+	book, doesExist := getAuctionBook(auctionID)
+	if !doesExist {
+		// TODO: return apt reply
+		return
+	}
+
+	// return the auction status, along with winner
 	// find the best bid
-	bestBid, err := findBestBid(bids)
+	bestBid := book.FindBestBid()
+	if bestBid != nil {
+
+	}
 
 	// return reponse with best bidder
 	jsonResp, err := json.Marshal(bestBid)
